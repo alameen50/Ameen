@@ -85,7 +85,10 @@ function App() {
       {!isAdminRoute && <Footer />}
 
       <Modal isOpen={modal === 'register'} onClose={() => setModal(null)} title="Join the Future">
-        <RegisterForm onSuccess={() => setModal('loan')} />
+        <RegisterForm onSuccess={(user) => {
+          setClientUser(user)
+          setModal('loan')
+        }} />
       </Modal>
 
       <Modal isOpen={modal === 'login'} onClose={() => setModal(null)} title="Welcome Back">

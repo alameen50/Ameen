@@ -22,19 +22,22 @@ export default function RegisterForm({ onSuccess }) {
             return
         }
 
-        const normalizedData = {
+        const newUser = {
             ...formData,
             email: normalizedEmail,
-            password: formData.password.trim()
-        }
-        customers.push({
-            ...normalizedData,
+            password: formData.password.trim(),
             id: Date.now(),
             joined: new Date().toLocaleDateString(),
             status: 'Pending'
-        })
+        }
+
+        customers.push(newUser)
         localStorage.setItem('ameen_customers', JSON.stringify(customers))
-        onSuccess()
+
+        // Automatically set session so subsequent forms (like LoanForm) have user info
+        sessionStorage.setItem('ameen_client', JSON.stringify(newUser))
+
+        onSuccess(newUser)
     }
 
     return (
