@@ -15,33 +15,43 @@ export default function LoginForm({ onSuccess, onSwitchToRegister }) {
         const emailStr = formData.email.trim().toLowerCase()
         const passStr = formData.password.trim()
 
+        console.log('Login attempt for:', emailStr)
+
         const customers = JSON.parse(localStorage.getItem('ameen_customers') || '[]')
 
-        // Find all users with matching email and password
+        // Find all users with matching email and password (extremely robust)
         const allMatches = customers.filter(c => {
             const cEmail = (c.email || '').trim().toLowerCase()
             const cPass = (c.password || '').trim()
             return cEmail === emailStr && cPass === passStr
         })
 
+        console.log('Matches found:', allMatches.length)
+
         if (allMatches.length === 0) {
-            setError('Invalid email or password. Please check your credentials.')
+            setError('Invalid email or password. Please verify your credentials.')
             return
         }
 
-        // Prioritize approved profile if duplicates exist (legacy data)
-        const approvedUser = allMatches.find(u => (u.status || '').toLowerCase() === 'approved')
-        const user = approvedUser || allMatches[0]
+        // Prioritize approved profile (case-insensitive check)
+        const approvedUser = allMatches.find(u => {
+            const status = (u.status || '').trim().toLowerCase()
+            return status === 'approved'
+        })
 
-        // Check if the user is approved
-        if (!user.status || user.status.toLowerCase() !== 'approved') {
-            const currentStatus = user.status || 'Pending'
-            setError(`Account Access Restricted: Your current status is "${currentStatus}". Please wait for Admin approval to access the portal.`)
+        const user = approvedUser || allMatches[0]
+        const currentStatus = (user.status || 'Pending').trim().toLowerCase()
+
+        console.log('Selected user status:', user.status)
+
+        // Check if the user is approved (case-insensitive)
+        if (currentStatus !== 'approved') {
+            setError(`Portal Access Restricted: Your current status is "${user.status || 'Pending'}". Manual Admin approval is required before you can access your dashboard.`)
             return
         }
 
         // Successfully logged in
-        console.log('Login successful for:', user.email)
+        console.log('Login GRANTED for:', user.email)
         sessionStorage.setItem('ameen_client', JSON.stringify(user))
         onSuccess(user)
     }

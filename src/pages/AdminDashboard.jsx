@@ -54,14 +54,39 @@ export default function AdminDashboard({ onLogout }) {
         if (!window.confirm(confirmMsg)) return
 
         try {
-            const updated = loans.map(l => String(l.id) === String(id) ? { ...l, status } : l)
-            localStorage.setItem('ameen_loans', JSON.stringify(updated))
-            setLoans(updated) // Update state immediately for better reactivity
+            const allLoans = JSON.parse(localStorage.getItem('ameen_loans') || '[]')
+            const updatedLoans = allLoans.map(l => String(l.id) === String(id) ? { ...l, status } : l)
+            localStorage.setItem('ameen_loans', JSON.stringify(updatedLoans))
+            setLoans(updatedLoans)
+
             if (selectedLoan?.id === id) {
                 setSelectedLoan({ ...selectedLoan, status })
             }
+
+            // If loan is approved, also approve the client automatically
+            if (status === 'Approved') {
+                const loan = allLoans.find(l => String(l.id) === String(id))
+                if (loan) {
+                    const allCustomers = JSON.parse(localStorage.getItem('ameen_customers') || '[]')
+                    const updatedCustomers = allCustomers.map(c => {
+                        // Match by name or NIN for safety
+                        const matchesName = (c.fullName || c.customerName) === loan.customerName
+                        const matchesNIN = c.nin && loan.nin && c.nin === loan.nin
+
+                        if ((matchesName || matchesNIN) && (c.status === 'Pending' || !c.status)) {
+                            return { ...c, status: 'Approved' }
+                        }
+                        return c
+                    })
+                    localStorage.setItem('ameen_customers', JSON.stringify(updatedCustomers))
+                    setCustomers(updatedCustomers)
+                }
+            }
+
+            alert(`Loan ${status} successfully.`)
         } catch (e) {
             console.error('AdminDashboard: Error updating status', e)
+            alert('An error occurred while updating status.')
         }
     }
 
