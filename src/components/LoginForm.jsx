@@ -16,15 +16,19 @@ export default function LoginForm({ onSuccess, onSwitchToRegister }) {
         const passStr = formData.password.trim()
 
         const customers = JSON.parse(localStorage.getItem('ameen_customers') || '[]')
-        const user = customers.find(c =>
+        const allMatches = customers.filter(c =>
             (c.email || '').trim().toLowerCase() === emailStr &&
             (c.password || '').trim() === passStr
         )
 
-        if (!user) {
+        if (allMatches.length === 0) {
             setError('Invalid email or password.')
             return
         }
+
+        // Prioritize approved profile if duplicates exist
+        const approvedUser = allMatches.find(u => u.status?.toLowerCase() === 'approved')
+        const user = approvedUser || allMatches[0]
 
         if (!user.status || user.status.toLowerCase() !== 'approved') {
             const currentStatus = user.status || 'Pending'

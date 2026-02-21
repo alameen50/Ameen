@@ -13,12 +13,20 @@ export default function RegisterForm({ onSuccess }) {
 
     const handleSubmit = (e) => {
         e.preventDefault()
+        const normalizedEmail = formData.email.trim().toLowerCase()
+        const customers = JSON.parse(localStorage.getItem('ameen_customers') || '[]')
+
+        // Check for duplicates
+        if (customers.some(c => (c.email || '').trim().toLowerCase() === normalizedEmail)) {
+            alert('An account with this email already exists. Please log in or use a different email.')
+            return
+        }
+
         const normalizedData = {
             ...formData,
-            email: formData.email.trim().toLowerCase(),
+            email: normalizedEmail,
             password: formData.password.trim()
         }
-        const customers = JSON.parse(localStorage.getItem('ameen_customers') || '[]')
         customers.push({
             ...normalizedData,
             id: Date.now(),

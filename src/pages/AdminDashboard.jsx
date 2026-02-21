@@ -78,13 +78,23 @@ export default function AdminDashboard({ onLogout }) {
         }
     }
 
-    const filtered = (loans || [])
+    const filteredLoans = (loans || [])
         .filter(l => l && (filter === 'all' || (l.status && String(l.status).toLowerCase() === filter.toLowerCase())))
         .filter(l => {
             if (!l) return false
             const searchLower = (search || '').toLowerCase()
             const name = (l.customerName || 'Anonymous').toLowerCase()
             const id = String(l.id).toLowerCase()
+            return name.includes(searchLower) || id.includes(searchLower)
+        })
+
+    const filteredCustomers = (customers || [])
+        .filter(c => c && (filter === 'all' || (c.status && String(c.status).toLowerCase() === filter.toLowerCase())))
+        .filter(c => {
+            if (!c) return false
+            const searchLower = (search || '').toLowerCase()
+            const name = (c.fullName || c.customerName || 'Anonymous').toLowerCase()
+            const id = String(c.id).toLowerCase()
             return name.includes(searchLower) || id.includes(searchLower)
         })
 
@@ -160,7 +170,7 @@ export default function AdminDashboard({ onLogout }) {
                         <div>
                             <h2 className="text-xl font-black text-slate-900">{activeTab === 'loans' ? 'Loan Queue' : 'Client Roster'}</h2>
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                                {activeTab === 'loans' ? filtered.length : customers.length} {activeTab === 'loans' ? 'Applications' : 'Clients'} found
+                                {activeTab === 'loans' ? filteredLoans.length : filteredCustomers.length} {activeTab === 'loans' ? 'Applications' : 'Clients'} found
                             </p>
                         </div>
                         <div className="flex gap-4">
@@ -199,7 +209,7 @@ export default function AdminDashboard({ onLogout }) {
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                                 {activeTab === 'loans' ? (
-                                    filtered.length === 0 ? (
+                                    filteredLoans.length === 0 ? (
                                         <tr>
                                             <td colSpan="4" className="px-8 py-20 text-center">
                                                 <div className="flex flex-col items-center gap-4">
@@ -210,7 +220,7 @@ export default function AdminDashboard({ onLogout }) {
                                             </td>
                                         </tr>
                                     ) : (
-                                        filtered.map(l => (
+                                        filteredLoans.map(l => (
                                             <tr key={l.id} className="hover:bg-slate-50/50 transition-colors group border-b border-slate-100 last:border-0">
                                                 <td className="px-8 py-6">
                                                     <p className="font-bold text-slate-900">{l.customerName || 'Anonymous'}</p>
@@ -257,17 +267,18 @@ export default function AdminDashboard({ onLogout }) {
                                         ))
                                     )
                                 ) : (
-                                    customers.length === 0 ? (
+                                    filteredCustomers.length === 0 ? (
                                         <tr>
                                             <td colSpan="4" className="px-8 py-20 text-center">
                                                 <div className="flex flex-col items-center gap-4">
                                                     <Users className="w-12 h-12 text-slate-300" />
-                                                    <p className="font-bold text-slate-500">No clients registered yet</p>
+                                                    <p className="font-bold text-slate-500">No clients found matching your criteria</p>
+                                                    <button onClick={() => { setFilter('all'); setSearch('') }} className="text-emerald-600 text-xs font-black uppercase tracking-widest hover:underline">Clear all filters</button>
                                                 </div>
                                             </td>
                                         </tr>
                                     ) : (
-                                        customers.map(c => (
+                                        filteredCustomers.map(c => (
                                             <tr key={c.id} className="hover:bg-slate-50/50 transition-colors group border-b border-slate-100 last:border-0">
                                                 <td className="px-8 py-6">
                                                     <p className="font-bold text-slate-900">{c.fullName || c.customerName}</p>
