@@ -14,6 +14,7 @@ import ClientDashboard from './pages/ClientDashboard'
 function App() {
   const [modal, setModal] = useState(null)
   const [isAdmin, setIsAdmin] = useState(() => !!sessionStorage.getItem('ameen_admin'))
+  const [registrationUser, setRegistrationUser] = useState(null)
   const [clientUser, setClientUser] = useState(() => {
     const stored = sessionStorage.getItem('ameen_client')
     return stored ? JSON.parse(stored) : null
@@ -86,7 +87,7 @@ function App() {
 
       <Modal isOpen={modal === 'register'} onClose={() => setModal(null)} title="Join the Future">
         <RegisterForm onSuccess={(user) => {
-          setClientUser(user)
+          setRegistrationUser(user)
           setModal('loan')
         }} />
       </Modal>
@@ -99,7 +100,10 @@ function App() {
       </Modal>
 
       <Modal isOpen={modal === 'loan'} onClose={() => setModal(null)} title="Tell us more">
-        <LoanForm onSuccess={() => setModal(null)} user={clientUser} />
+        <LoanForm onSuccess={() => {
+          setModal(null)
+          setRegistrationUser(null)
+        }} user={registrationUser || clientUser} />
       </Modal>
     </div>
   )

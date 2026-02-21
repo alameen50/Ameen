@@ -34,9 +34,6 @@ export default function RegisterForm({ onSuccess }) {
         customers.push(newUser)
         localStorage.setItem('ameen_customers', JSON.stringify(customers))
 
-        // Automatically set session so subsequent forms (like LoanForm) have user info
-        sessionStorage.setItem('ameen_client', JSON.stringify(newUser))
-
         onSuccess(newUser)
     }
 
