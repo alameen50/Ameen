@@ -16,27 +16,32 @@ export default function LoginForm({ onSuccess, onSwitchToRegister }) {
         const passStr = formData.password.trim()
 
         const customers = JSON.parse(localStorage.getItem('ameen_customers') || '[]')
-        const allMatches = customers.filter(c =>
-            (c.email || '').trim().toLowerCase() === emailStr &&
-            (c.password || '').trim() === passStr
-        )
+
+        // Find all users with matching email and password
+        const allMatches = customers.filter(c => {
+            const cEmail = (c.email || '').trim().toLowerCase()
+            const cPass = (c.password || '').trim()
+            return cEmail === emailStr && cPass === passStr
+        })
 
         if (allMatches.length === 0) {
-            setError('Invalid email or password.')
+            setError('Invalid email or password. Please check your credentials.')
             return
         }
 
-        // Prioritize approved profile if duplicates exist
-        const approvedUser = allMatches.find(u => u.status?.toLowerCase() === 'approved')
+        // Prioritize approved profile if duplicates exist (legacy data)
+        const approvedUser = allMatches.find(u => (u.status || '').toLowerCase() === 'approved')
         const user = approvedUser || allMatches[0]
 
+        // Check if the user is approved
         if (!user.status || user.status.toLowerCase() !== 'approved') {
             const currentStatus = user.status || 'Pending'
-            setError(`Your account status is "${currentStatus}". Admin approval is required to log in.`)
+            setError(`Account Access Restricted: Your current status is "${currentStatus}". Please wait for Admin approval to access the portal.`)
             return
         }
 
         // Successfully logged in
+        console.log('Login successful for:', user.email)
         sessionStorage.setItem('ameen_client', JSON.stringify(user))
         onSuccess(user)
     }

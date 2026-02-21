@@ -70,11 +70,20 @@ export default function AdminDashboard({ onLogout }) {
         if (!window.confirm(confirmMsg)) return
 
         try {
-            const updated = customers.map(c => String(c.id) === String(id) ? { ...c, status } : c)
+            // Read latest data from storage to avoid stale state issues
+            const latestCustomers = JSON.parse(localStorage.getItem('ameen_customers') || '[]')
+            const updated = latestCustomers.map(c =>
+                String(c.id) === String(id) ? { ...c, status } : c
+            )
+
             localStorage.setItem('ameen_customers', JSON.stringify(updated))
-            setCustomers(updated) // Update state immediately
+            setCustomers(updated)
+
+            // If the user just updated, show a simple alert for confirmation
+            alert(`User status updated to ${status} successfully.`)
         } catch (e) {
             console.error('AdminDashboard: Error updating customer status', e)
+            alert('Failed to update user status. Please try again.')
         }
     }
 
