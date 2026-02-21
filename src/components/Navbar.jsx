@@ -1,12 +1,26 @@
-import { Link, useLocation } from 'react-router-dom'
-import { Leaf, Menu, X, ArrowRight } from 'lucide-react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Leaf, Menu, X, ArrowRight, Sun, Moon } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
-export default function Navbar({ onOpenRegister }) {
+export default function Navbar({ onOpenRegister, onOpenLogin }) {
+    const isClientLoggedIn = !!sessionStorage.getItem('ameen_client')
     const [mobileOpen, setMobileOpen] = useState(false)
     const [scrolled, setScrolled] = useState(false)
     const location = useLocation()
+    const navigate = useNavigate()
     const isAdminPage = location.pathname.startsWith('/admin')
+
+    const handleNav = (id) => {
+        if (location.pathname !== '/') {
+            navigate(`/#${id}`)
+        } else {
+            const element = document.getElementById(id)
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth' })
+            }
+        }
+        setMobileOpen(false)
+    }
 
     useEffect(() => {
         const handleScroll = () => {
@@ -35,38 +49,64 @@ export default function Navbar({ onOpenRegister }) {
 
                     <div className="hidden lg:flex items-center gap-8">
                         {['Services', 'Process', 'Testimonials', 'FAQ'].map(item => (
-                            <a
+                            <button
                                 key={item}
-                                href={`#${item.toLowerCase().replace(' ', '-')}`}
+                                onClick={() => handleNav(item.toLowerCase().replace(' ', '-'))}
                                 className="text-[12px] font-bold transition-all tracking-tight hover:text-emerald-500 text-navy-900/60"
                             >
                                 {item}
-                            </a>
+                            </button>
                         ))}
                     </div>
 
                     <div className="hidden lg:flex items-center gap-4">
-                        <button
-                            onClick={onOpenRegister}
-                            className="px-5 py-2 rounded-full font-black text-[12px] transition-all active:scale-95 flex items-center gap-2.5 group shadow-xl bg-navy-900 text-white hover:bg-emerald-500"
-                        >
-                            Get Started
-                            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-                        </button>
+                        {isClientLoggedIn ? (
+                            <>
+                                <Link
+                                    to="/dashboard"
+                                    className="px-5 py-2 rounded-full font-black text-[12px] transition-all active:scale-95 flex items-center gap-2.5 group shadow-xl bg-emerald-500 text-white hover:bg-emerald-600"
+                                >
+                                    Dashboard
+                                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                                </Link>
+                            </>
+                        ) : (
+                            <>
+                                <button
+                                    onClick={onOpenLogin}
+                                    className="px-5 py-2 rounded-full font-black text-[12px] transition-all active:scale-95 text-navy-900 hover:text-emerald-500"
+                                >
+                                    Client Portal
+                                </button>
+                                <button
+                                    onClick={onOpenRegister}
+                                    className="px-5 py-2 rounded-full font-black text-[12px] transition-all active:scale-95 flex items-center gap-2.5 group shadow-xl bg-navy-900 text-white hover:bg-emerald-500"
+                                >
+                                    Get Started
+                                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                                </button>
+                            </>
+                        )}
                     </div>
 
-                    <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden p-2 text-navy-900">
-                        {mobileOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
-                    </button>
+                    <div className="flex items-center gap-2 lg:hidden">
+                        <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 text-navy-900">
+                            {mobileOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
+                        </button>
+                    </div>
                 </div>
 
                 {/* Mobile Menu */}
                 <div className={`lg:hidden absolute top-full inset-x-6 mt-4 transition-all duration-500 ${mobileOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
-                    <div className="glass rounded-[2.5rem] p-8 border border-white shadow-2xl space-y-4">
+                    <div className="bg-white rounded-[2.5rem] p-8 border border-navy-100 shadow-2xl space-y-4">
                         {['Services', 'Process', 'Testimonials', 'FAQ'].map(item => (
-                            <a key={item} href={`#${item.toLowerCase()}`} onClick={() => setMobileOpen(false)} className="block py-4 text-lg font-bold text-navy-900 border-b border-navy-50">
+                            <button
+                                key={item}
+                                onClick={() => handleNav(item.toLowerCase().replace(' ', '-'))}
+                                className="block w-full text-left py-4 text-lg font-bold text-navy-900 border-b border-navy-50"
+                            >
                                 {item}
-                            </a>
+                            </button>
                         ))}
                         <button
                             onClick={() => { onOpenRegister(); setMobileOpen(false); }}
@@ -74,6 +114,14 @@ export default function Navbar({ onOpenRegister }) {
                         >
                             Get Started Now
                         </button>
+                        {!isClientLoggedIn && (
+                            <button
+                                onClick={() => { onOpenLogin(); setMobileOpen(false); }}
+                                className="w-full py-4 bg-white text-navy-900 border border-navy-100 rounded-2xl font-bold text-lg mt-2"
+                            >
+                                Client Portal
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>

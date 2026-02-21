@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import {
     Users, Clock, Wallet, Search,
     CheckCircle, XCircle, LogOut, RefreshCw,
-    AlertCircle, Leaf, ChevronDown, Eye, X, ShieldCheck
+    AlertCircle, Leaf, ChevronDown, Eye, X, ShieldCheck, Sun, Moon
 } from 'lucide-react'
 
 export default function AdminDashboard({ onLogout }) {
@@ -11,53 +11,52 @@ export default function AdminDashboard({ onLogout }) {
     const [filter, setFilter] = useState('all')
     const [isRefreshing, setIsRefreshing] = useState(false)
     const [selectedLoan, setSelectedLoan] = useState(null)
+    const [customers, setCustomers] = useState([])
+    const [activeTab, setActiveTab] = useState('loans') // 'loans' or 'clients'
 
     const loadData = () => {
         setIsRefreshing(true)
 
-        // Simulate a brief delay for a better "interactive" feel
+        // Reduced delay for better responsiveness
         setTimeout(() => {
             try {
                 const storedLoans = localStorage.getItem('ameen_loans')
+                const storedCustomers = localStorage.getItem('ameen_customers')
                 setLoans(storedLoans ? JSON.parse(storedLoans) : [])
+                setCustomers(storedCustomers ? JSON.parse(storedCustomers) : [])
             } catch (e) {
-                console.error('AdminDashboard: Failed to parse loans', e)
+                console.error('AdminDashboard: Failed to parse data', e)
                 setLoans([])
+                setCustomers([])
             }
             setIsRefreshing(false)
-        }, 800)
+        }, 300)
     }
 
     useEffect(() => {
-        loadData()
+        // Use a slight delay or queueMicrotask to avoid synchronous cascading renders
+        const timer = setTimeout(() => {
+            loadData()
+        }, 0)
+        return () => clearTimeout(timer)
     }, [])
 
     const stats = useMemo(() => {
-        let customers = []
-        let allLoans = []
-        try {
-            customers = JSON.parse(localStorage.getItem('ameen_customers') || '[]')
-            allLoans = JSON.parse(localStorage.getItem('ameen_loans') || '[]')
-        } catch (error) {
-            console.error('AdminDashboard: Failed to parse stats', error)
-        }
-
         return {
             totalCustomers: customers.length,
-            pendingLoans: allLoans.filter(l => l.status === 'Pending').length,
-            approvedLoans: allLoans.filter(l => l.status === 'Approved').length,
-            totalDisbursed: allLoans.filter(l => l.status === 'Approved').reduce((acc, l) => acc + Number(l.amount || 0), 0)
+            pendingLoans: loans.filter(l => l.status === 'Pending').length,
+            approvedLoans: loans.filter(l => l.status === 'Approved').length,
+            totalDisbursed: loans.filter(l => l.status === 'Approved').reduce((acc, l) => acc + Number(l.amount || 0), 0)
         }
-    }, []) // ESLint warning: loans is actually internal, we can leave empty or fix data flow
+    }, [loans, customers])
     const handleAction = (id, status) => {
         const confirmMsg = status === 'Approved' ? 'Are you sure you want to approve this loan?' : 'Are you sure you want to reject this loan?'
         if (!window.confirm(confirmMsg)) return
 
         try {
-            const allLoans = JSON.parse(localStorage.getItem('ameen_loans') || '[]')
-            const updated = allLoans.map(l => l.id === id ? { ...l, status } : l)
+            const updated = loans.map(l => String(l.id) === String(id) ? { ...l, status } : l)
             localStorage.setItem('ameen_loans', JSON.stringify(updated))
-            loadData()
+            setLoans(updated) // Update state immediately for better reactivity
             if (selectedLoan?.id === id) {
                 setSelectedLoan({ ...selectedLoan, status })
             }
@@ -66,9 +65,28 @@ export default function AdminDashboard({ onLogout }) {
         }
     }
 
+    const handleCustomerAction = (id, status) => {
+        const confirmMsg = status === 'Approved' ? 'Approve this client registration?' : 'Reject this client registration?'
+        if (!window.confirm(confirmMsg)) return
+
+        try {
+            const updated = customers.map(c => String(c.id) === String(id) ? { ...c, status } : c)
+            localStorage.setItem('ameen_customers', JSON.stringify(updated))
+            setCustomers(updated) // Update state immediately
+        } catch (e) {
+            console.error('AdminDashboard: Error updating customer status', e)
+        }
+    }
+
     const filtered = (loans || [])
-        .filter(l => l && (filter === 'all' || (l.status && l.status.toLowerCase() === filter)))
-        .filter(l => l && l.customerName && l.customerName.toLowerCase().includes((search || '').toLowerCase()))
+        .filter(l => l && (filter === 'all' || (l.status && String(l.status).toLowerCase() === filter.toLowerCase())))
+        .filter(l => {
+            if (!l) return false
+            const searchLower = (search || '').toLowerCase()
+            const name = (l.customerName || 'Anonymous').toLowerCase()
+            const id = String(l.id).toLowerCase()
+            return name.includes(searchLower) || id.includes(searchLower)
+        })
 
     return (
         <div className="min-h-screen bg-slate-100/80 font-body pb-20 transition-colors duration-500">
@@ -116,23 +134,23 @@ export default function AdminDashboard({ onLogout }) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                     <Stat
                         item={{ icon: Users, label: 'Clients', value: stats.totalCustomers, color: 'blue' }}
-                        isActive={filter === 'all'}
-                        onClick={() => setFilter('all')}
+                        isActive={activeTab === 'clients'}
+                        onClick={() => { setActiveTab('clients'); setFilter('all') }}
                     />
                     <Stat
-                        item={{ icon: Clock, label: 'Pending', value: stats.pendingLoans, color: 'amber' }}
-                        isActive={filter === 'pending'}
-                        onClick={() => setFilter('pending')}
+                        item={{ icon: Clock, label: 'Pending Loans', value: stats.pendingLoans, color: 'amber' }}
+                        isActive={activeTab === 'loans' && filter === 'pending'}
+                        onClick={() => { setActiveTab('loans'); setFilter('pending') }}
                     />
                     <Stat
-                        item={{ icon: CheckCircle, label: 'Approved', value: stats.approvedLoans, color: 'emerald' }}
-                        isActive={filter === 'approved'}
-                        onClick={() => setFilter('approved')}
+                        item={{ icon: CheckCircle, label: 'Approved Loans', value: stats.approvedLoans, color: 'emerald' }}
+                        isActive={activeTab === 'loans' && filter === 'approved'}
+                        onClick={() => { setActiveTab('loans'); setFilter('approved') }}
                     />
                     <Stat
                         item={{ icon: Wallet, label: 'Disbursed', value: `₦${stats.totalDisbursed.toLocaleString()}`, color: 'purple' }}
                         isActive={false}
-                        onClick={() => { }}
+                        onClick={() => { setActiveTab('loans'); setFilter('all') }}
                     />
                 </div>
 
@@ -140,9 +158,9 @@ export default function AdminDashboard({ onLogout }) {
                 <div className="bg-white/90 backdrop-blur-md rounded-[2.5rem] shadow-2xl shadow-slate-900/5 border border-white overflow-hidden">
                     <div className="p-8 border-b border-slate-100 flex flex-col md:flex-row gap-6 md:items-center md:justify-between">
                         <div>
-                            <h2 className="text-xl font-black text-slate-900">Loan Queue</h2>
+                            <h2 className="text-xl font-black text-slate-900">{activeTab === 'loans' ? 'Loan Queue' : 'Client Roster'}</h2>
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                                {filtered.length} Applications found
+                                {activeTab === 'loans' ? filtered.length : customers.length} {activeTab === 'loans' ? 'Applications' : 'Clients'} found
                             </p>
                         </div>
                         <div className="flex gap-4">
@@ -153,13 +171,13 @@ export default function AdminDashboard({ onLogout }) {
                                     placeholder="Search clients..."
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
-                                    className="pl-12 pr-4 py-3 bg-slate-50 rounded-2xl text-sm font-bold outline-none border-2 border-transparent focus:border-emerald-500 transition-all w-full md:w-64"
+                                    className="pl-12 pr-4 py-3 bg-slate-50 rounded-2xl text-sm font-bold outline-none border-2 border-transparent focus:border-emerald-500 transition-all w-full md:w-64 text-navy-900"
                                 />
                             </div>
                             <select
                                 value={filter}
                                 onChange={(e) => setFilter(e.target.value)}
-                                className="px-4 py-3 bg-slate-50 rounded-2xl text-sm font-bold outline-none border-2 border-transparent focus:border-emerald-500 cursor-pointer"
+                                className="px-4 py-3 bg-slate-50 rounded-2xl text-sm font-bold outline-none border-2 border-transparent focus:border-emerald-500 cursor-pointer text-navy-900"
                             >
                                 <option value="all">Status: All</option>
                                 <option value="pending">Pending</option>
@@ -173,69 +191,124 @@ export default function AdminDashboard({ onLogout }) {
                         <table className="w-full">
                             <thead className="bg-slate-50/50">
                                 <tr>
-                                    <th className="px-8 py-4 text-left text-[10px] font-black uppercase text-slate-400 tracking-widest">Client</th>
-                                    <th className="px-8 py-4 text-left text-[10px] font-black uppercase text-slate-400 tracking-widest">Amount</th>
+                                    <th className="px-8 py-4 text-left text-[10px] font-black uppercase text-slate-400 tracking-widest">{activeTab === 'loans' ? 'Client' : 'Full Name'}</th>
+                                    <th className="px-8 py-4 text-left text-[10px] font-black uppercase text-slate-400 tracking-widest">{activeTab === 'loans' ? 'Amount' : 'Contact'}</th>
                                     <th className="px-8 py-4 text-left text-[10px] font-black uppercase text-slate-400 tracking-widest">Status</th>
                                     <th className="px-8 py-4 text-right text-[10px] font-black uppercase text-slate-400 tracking-widest">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
-                                {filtered.length === 0 ? (
-                                    <tr>
-                                        <td colSpan="4" className="px-8 py-20 text-center">
-                                            <div className="flex flex-col items-center gap-4">
-                                                <AlertCircle className="w-12 h-12 text-slate-300" />
-                                                <p className="font-bold text-slate-500">No applications found matching your criteria</p>
-                                                <button onClick={() => { setFilter('all'); setSearch('') }} className="text-emerald-600 text-xs font-black uppercase tracking-widest hover:underline">Clear all filters</button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    filtered.map(l => (
-                                        <tr key={l.id} className="hover:bg-slate-50/50 transition-colors group">
-                                            <td className="px-8 py-6">
-                                                <p className="font-bold text-slate-900">{l.customerName}</p>
-                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">#{String(l.id).substring(0, 8)}</p>
-                                            </td>
-                                            <td className="px-8 py-6 font-black text-emerald-600">₦{Number(l.amount).toLocaleString()}</td>
-                                            <td className="px-8 py-6">
-                                                <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase transition-all ${l.status === 'Pending' ? 'bg-amber-100 text-amber-700' :
-                                                    l.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
-                                                    }`}>
-                                                    {l.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-8 py-6 text-right">
-                                                <div className="flex justify-end gap-2">
-                                                    <button
-                                                        onClick={() => setSelectedLoan(l)}
-                                                        className="p-2 bg-slate-100 text-slate-500 rounded-lg hover:bg-slate-200 transition-all"
-                                                        title="View Details"
-                                                    >
-                                                        <Eye className="w-4 h-4" />
-                                                    </button>
-                                                    {l.status === 'Pending' && (
-                                                        <>
-                                                            <button
-                                                                onClick={() => handleAction(l.id, 'Approved')}
-                                                                className="p-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
-                                                                title="Approve"
-                                                            >
-                                                                <CheckCircle className="w-4 h-4" />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleAction(l.id, 'Rejected')}
-                                                                className="p-2 bg-slate-100 text-slate-400 rounded-lg hover:bg-rose-500 hover:text-white active:scale-95 transition-all"
-                                                                title="Reject"
-                                                            >
-                                                                <XCircle className="w-4 h-4" />
-                                                            </button>
-                                                        </>
-                                                    )}
+                                {activeTab === 'loans' ? (
+                                    filtered.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="4" className="px-8 py-20 text-center">
+                                                <div className="flex flex-col items-center gap-4">
+                                                    <AlertCircle className="w-12 h-12 text-slate-300" />
+                                                    <p className="font-bold text-slate-500">No applications found matching your criteria</p>
+                                                    <button onClick={() => { setFilter('all'); setSearch('') }} className="text-emerald-600 text-xs font-black uppercase tracking-widest hover:underline">Clear all filters</button>
                                                 </div>
                                             </td>
                                         </tr>
-                                    ))
+                                    ) : (
+                                        filtered.map(l => (
+                                            <tr key={l.id} className="hover:bg-slate-50/50 transition-colors group border-b border-slate-100 last:border-0">
+                                                <td className="px-8 py-6">
+                                                    <p className="font-bold text-slate-900">{l.customerName || 'Anonymous'}</p>
+                                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">#{String(l.id).substring(0, 8)}</p>
+                                                </td>
+                                                <td className="px-8 py-6 font-black text-emerald-600">₦{Number(l.amount).toLocaleString()}</td>
+                                                <td className="px-8 py-6">
+                                                    <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase transition-all ${l.status === 'Pending' ? 'bg-amber-100 text-amber-700' :
+                                                        l.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                                                        }`}>
+                                                        {l.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-8 py-6 text-right">
+                                                    <div className="flex justify-end gap-2">
+                                                        <button
+                                                            onClick={() => setSelectedLoan(l)}
+                                                            className="p-2 bg-slate-100 text-slate-500 rounded-lg hover:bg-slate-200 transition-all"
+                                                            title="View Details"
+                                                        >
+                                                            <Eye className="w-4 h-4" />
+                                                        </button>
+                                                        {l.status === 'Pending' && (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => handleAction(l.id, 'Approved')}
+                                                                    className="p-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
+                                                                    title="Approve"
+                                                                >
+                                                                    <CheckCircle className="w-4 h-4" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleAction(l.id, 'Rejected')}
+                                                                    className="p-2 bg-slate-100 text-slate-400 rounded-lg hover:bg-rose-500 hover:text-white active:scale-95 transition-all"
+                                                                    title="Reject"
+                                                                >
+                                                                    <XCircle className="w-4 h-4" />
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )
+                                ) : (
+                                    customers.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="4" className="px-8 py-20 text-center">
+                                                <div className="flex flex-col items-center gap-4">
+                                                    <Users className="w-12 h-12 text-slate-300" />
+                                                    <p className="font-bold text-slate-500">No clients registered yet</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        customers.map(c => (
+                                            <tr key={c.id} className="hover:bg-slate-50/50 transition-colors group border-b border-slate-100 last:border-0">
+                                                <td className="px-8 py-6">
+                                                    <p className="font-bold text-slate-900">{c.fullName || c.customerName}</p>
+                                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">#{String(c.id).substring(0, 8)}</p>
+                                                </td>
+                                                <td className="px-8 py-6">
+                                                    <p className="text-sm font-bold text-slate-600">{c.email}</p>
+                                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{c.phone}</p>
+                                                </td>
+                                                <td className="px-8 py-6">
+                                                    <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase transition-all ${(c.status || 'Pending') === 'Pending' ? 'bg-amber-100 text-amber-700' :
+                                                        c.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                                                        }`}>
+                                                        {c.status || 'Pending'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-8 py-6 text-right">
+                                                    <div className="flex justify-end gap-2">
+                                                        {(c.status === 'Pending' || !c.status) && (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => handleCustomerAction(c.id, 'Approved')}
+                                                                    className="p-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
+                                                                    title="Approve Client"
+                                                                >
+                                                                    <CheckCircle className="w-4 h-4" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleCustomerAction(c.id, 'Rejected')}
+                                                                    className="p-2 bg-slate-100 text-slate-400 rounded-lg hover:bg-rose-500 hover:text-white active:scale-95 transition-all"
+                                                                    title="Reject Client"
+                                                                >
+                                                                    <XCircle className="w-4 h-4" />
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )
                                 )}
                             </tbody>
                         </table>
@@ -247,7 +320,7 @@ export default function AdminDashboard({ onLogout }) {
             {selectedLoan && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
                     <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setSelectedLoan(null)} />
-                    <div className="bg-white rounded-[2.5rem] w-full max-w-2xl relative z-10 overflow-hidden shadow-2xl animate-reveal">
+                    <div className="bg-white rounded-[2.5rem] w-full max-w-2xl relative z-10 overflow-hidden shadow-2xl animate-reveal border border-white">
                         <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                             <div>
                                 <h3 className="text-xl font-black text-slate-900">Application Insight</h3>
@@ -291,15 +364,11 @@ export default function AdminDashboard({ onLogout }) {
                                     </div>
                                     <div className="flex justify-between text-sm">
                                         <span className="text-slate-500 font-medium">Timestamp</span>
-                                        <span className="text-slate-900 font-bold">{new Date().toLocaleDateString()}</span>
+                                        <span className="text-slate-900 font-bold">{selectedLoan.date || new Date().toLocaleDateString()}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-slate-500 font-medium">Device Profile</span>
-                                        <span className="text-slate-900 font-bold">Verified Mobile</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-slate-500 font-medium">KYC Baseline</span>
-                                        <span className="text-emerald-600 font-bold">Passed</span>
+                                        <span className="text-slate-500 font-medium">Verification Status</span>
+                                        <span className="text-emerald-600 font-bold">Identity Verified</span>
                                     </div>
                                 </div>
                             </div>

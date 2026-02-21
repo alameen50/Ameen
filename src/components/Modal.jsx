@@ -10,7 +10,7 @@ export default function Modal({ isOpen, onClose, title, children }) {
                 onClick={onClose}
             />
 
-            <div className="relative bg-white w-full max-w-lg rounded-[2.5rem] shadow-[0_32px_128px_-32px_rgba(0,0,0,0.3)] overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-500">
+            <div className="relative bg-white w-full max-w-lg rounded-[2.5rem] shadow-[0_32px_128px_-32px_rgba(0,0,0,0.3)] border border-white overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-500">
                 {/* Header */}
                 <div className="px-8 sm:px-12 pt-8 sm:pt-12 pb-2 flex justify-between items-start">
                     <div className="space-y-1">

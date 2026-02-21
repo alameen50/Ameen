@@ -27,15 +27,15 @@ export default function AdminLogin({ onLogin }) {
                 setError('Verification failed. Invalid admin credentials.')
                 setLoading(false)
             }
-        }, 800)
+        }, 300)
     }
 
     return (
-        <div className="min-h-screen bg-navy-50 flex flex-col items-center justify-center p-6 relative">
+        <div className="min-h-screen bg-navy-50 flex flex-col items-center justify-center p-6 relative transition-colors duration-500">
             <div className="absolute top-0 left-0 w-full h-1/2 bg-navy-900 -z-0" />
 
             <div className="w-full max-w-md relative z-10">
-                <div className="text-center mb-8">
+                <div className="text-center mb-8 relative">
                     <Link to="/" className="inline-flex items-center gap-2 text-white/50 hover:text-white transition-colors mb-6 text-xs font-bold uppercase tracking-widest">
                         <ArrowLeft className="w-4 h-4" /> Go Home
                     </Link>
@@ -62,7 +62,7 @@ export default function AdminLogin({ onLogin }) {
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-4 bg-navy-50 rounded-2xl text-sm font-bold outline-none border-2 border-transparent focus:border-emerald-500"
+                                    className="w-full pl-12 pr-4 py-4 bg-navy-50 rounded-2xl text-sm font-bold outline-none border-2 border-transparent focus:border-emerald-500 placeholder:text-navy-300 transition-all text-navy-900"
                                     placeholder="admin@ameen.com"
                                 />
                             </div>
@@ -77,7 +77,7 @@ export default function AdminLogin({ onLogin }) {
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-12 pr-12 py-4 bg-navy-50 rounded-2xl text-sm font-bold outline-none border-2 border-transparent focus:border-emerald-500"
+                                    className="w-full pl-12 pr-12 py-4 bg-navy-50 rounded-2xl text-sm font-bold outline-none border-2 border-transparent focus:border-emerald-500 placeholder:text-navy-300 transition-all text-navy-900"
                                     placeholder="••••••••"
                                 />
                                 <button

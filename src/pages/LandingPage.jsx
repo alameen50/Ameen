@@ -1,13 +1,25 @@
+import { useState, useEffect } from 'react'
 import {
     ArrowRight, Zap, Shield, BarChart3,
     Users, Clock, Wallet, Star, ChevronDown,
     TrendingUp, Sparkles, Award, Globe, ZapIcon
 } from 'lucide-react'
-import { useState } from 'react'
 
 export default function LandingPage({ onOpenRegister }) {
+    useEffect(() => {
+        const hash = window.location.hash
+        if (hash) {
+            const id = hash.replace('#', '')
+            const element = document.getElementById(id)
+            if (element) {
+                setTimeout(() => {
+                    element.scrollIntoView({ behavior: 'smooth' })
+                }, 100)
+            }
+        }
+    }, [])
     return (
-        <div className="bg-overcast min-h-screen overflow-hidden selection:bg-emerald-100 selection:text-emerald-900 relative">
+        <div className="bg-overcast min-h-screen overflow-hidden selection:bg-emerald-100 selection:text-emerald-900 relative transition-colors duration-500">
             {/* Background Decorations */}
             <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-100/30 rounded-full blur-[120px] animate-blob" />
@@ -57,7 +69,7 @@ function HeroSection({ onOpenRegister }) {
                     </h1>
 
                     {/* Clean supporting text */}
-                    <p className="text-base sm:text-lg text-white/70 max-w-xl mx-auto font-medium leading-relaxed">
+                    <p className="text-base sm:text-lg text-white/80 max-w-xl mx-auto font-medium leading-relaxed">
                         Ethical capital and digital tools African entrepreneurs need to scale from local to global.
                     </p>
 
@@ -86,7 +98,7 @@ function HeroSection({ onOpenRegister }) {
                                 </div>
                             ))}
                         </div>
-                        <p className="text-[11px] font-black text-white/40 uppercase tracking-[0.2em]">
+                        <p className="text-[11px] font-black text-white/80 uppercase tracking-[0.2em]">
                             Trusted by <span className="text-emerald-500">12,000+</span> founders
                         </p>
                     </div>
@@ -94,8 +106,8 @@ function HeroSection({ onOpenRegister }) {
             </div>
 
             {/* Modern Scroll Indicator */}
-            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10 animate-bounce cursor-pointer opacity-50 hover:opacity-100 transition-opacity">
-                <div className="w-6 h-10 border-2 border-white/20 rounded-full flex justify-center p-1">
+            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10 animate-bounce cursor-pointer opacity-70 hover:opacity-100 transition-opacity">
+                <div className="w-6 h-10 border-2 border-white/40 rounded-full flex justify-center p-1">
                     <div className="w-1 h-2 bg-emerald-500 rounded-full" />
                 </div>
             </div>
@@ -105,7 +117,7 @@ function HeroSection({ onOpenRegister }) {
 
 function TrustSection() {
     return (
-        <section id="trust" className="py-20 relative overflow-hidden bg-white/30">
+        <section id="trust" className="py-20 relative overflow-hidden bg-white/30 transition-colors duration-500">
             <div className="max-w-7xl mx-auto px-6">
                 <div className="flex flex-col items-center gap-10 animate-reveal" style={{ animationDelay: '200ms' }}>
                     <p className="text-[11px] font-black uppercase tracking-[0.4em] text-navy-400/60">Supported by Global Leaders</p>
@@ -127,7 +139,7 @@ function ServicesSection() {
         { icon: Shield, title: "Ethical Yield", desc: "Interest-free options and community-backed social credit systems." }
     ]
     return (
-        <section id="services" className="py-32 lg:py-48 relative">
+        <section id="services" className="py-32 lg:py-48 relative transition-colors duration-500">
             <div className="max-w-7xl mx-auto px-6">
                 <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-8">
                     <div className="max-w-2xl space-y-6">
@@ -154,7 +166,7 @@ function ServicesSection() {
                             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-bl-[4rem] -z-0 group-hover:scale-125 transition-transform duration-700" />
                             <div className="relative z-10">
                                 <div className="w-16 h-16 bg-navy-50 rounded-2xl flex items-center justify-center mb-10 group-hover:bg-emerald-500 group-hover:text-white group-hover:rotate-6 group-hover:scale-110 transition-all duration-500 shadow-inner">
-                                    <item.icon className="w-7 h-7" />
+                                    <item.icon className="w-7 h-7 text-navy-900 group-hover:text-white" />
                                 </div>
                                 <h3 className="text-xl font-black text-navy-900 mb-3 tracking-tight">{item.title}</h3>
                                 <p className="text-navy-500/80 font-medium leading-relaxed text-base">{item.desc}</p>
@@ -199,7 +211,7 @@ function HowItWorksSection() {
                                     </div>
                                     <div>
                                         <h4 className="text-xl font-black text-white mb-2 tracking-tighter group-hover:text-emerald-400 transition-colors">{s.title}</h4>
-                                        <p className="text-navy-400 text-base font-medium leading-relaxed">{s.desc}</p>
+                                        <p className="text-white/60 text-base font-medium leading-relaxed">{s.desc}</p>
                                     </div>
                                 </div>
                             ))}
@@ -232,7 +244,7 @@ function HowItWorksSection() {
 
 function GrowthSection() {
     return (
-        <section id="growth" className="py-32 lg:py-48 relative overflow-hidden">
+        <section id="growth" className="py-32 lg:py-48 relative overflow-hidden transition-colors duration-500">
             <div className="max-w-7xl mx-auto px-6">
                 <div className="bg-emerald-50/50 p-12 sm:p-20 rounded-[3.5rem] border border-emerald-100/40 flex flex-col lg:flex-row items-center justify-between gap-16 relative overflow-hidden group animate-reveal">
                     <div className="max-w-xl space-y-10 text-center lg:text-left relative z-10">
@@ -267,7 +279,7 @@ function GrowthSection() {
 
 function TestimonialsSection() {
     return (
-        <section id="testimonials" className="py-32 lg:py-48 relative overflow-hidden">
+        <section id="testimonials" className="py-32 lg:py-48 relative overflow-hidden transition-colors duration-500">
             <div className="max-w-7xl mx-auto px-6">
                 <div className="text-center mb-24 space-y-6 animate-reveal">
                     <p className="text-[11px] font-black uppercase tracking-[0.4em] text-emerald-600">The Growth Wall</p>
@@ -339,7 +351,7 @@ function FAQSection() {
 
 function CTASection({ onOpenRegister }) {
     return (
-        <section id="cta" className="py-32 lg:py-60 px-4 sm:px-8">
+        <section id="cta" className="py-32 lg:py-60 px-4 sm:px-8 transition-colors duration-500">
             <div className="max-w-7xl mx-auto">
                 <div className="bg-navy-900 p-16 sm:p-32 rounded-[4rem] sm:rounded-[6rem] text-center relative overflow-hidden shadow-[0_60px_120px_-20px_rgba(15,23,42,0.6)] group animate-reveal">
                     {/* Background sophisticated glow */}
@@ -353,7 +365,7 @@ function CTASection({ onOpenRegister }) {
                             Global Ecosystem
                         </div>
                         <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight">Your evolution <br /> starts now.</h2>
-                        <p className="text-navy-400 text-lg font-medium max-w-xl mx-auto leading-relaxed">Join the 12,400+ African enterprises building their future on Ameen Digital.</p>
+                        <p className="text-white/70 text-lg font-medium max-w-xl mx-auto leading-relaxed">Join the 12,400+ African enterprises building their future on Ameen Digital.</p>
                         <button
                             onClick={onOpenRegister}
                             className="px-14 py-6 bg-emerald-500 text-white rounded-full font-black text-xl hover:bg-emerald-400 hover:scale-105 hover:shadow-[0_20px_50px_rgba(16,185,129,0.5)] transition-all active:scale-95 flex items-center gap-5 group relative overflow-hidden"

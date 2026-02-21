@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { User, Mail, Phone, MapPin, ChevronRight, ShieldCheck } from 'lucide-react'
+import { User, Mail, Phone, MapPin, ChevronRight, ShieldCheck, MailCheck } from 'lucide-react'
 
 export default function RegisterForm({ onSuccess }) {
     const [formData, setFormData] = useState({
         fullName: '',
         email: '',
+        password: '',
         phone: '',
         nin: '',
         address: ''
@@ -12,8 +13,18 @@ export default function RegisterForm({ onSuccess }) {
 
     const handleSubmit = (e) => {
         e.preventDefault()
+        const normalizedData = {
+            ...formData,
+            email: formData.email.trim().toLowerCase(),
+            password: formData.password.trim()
+        }
         const customers = JSON.parse(localStorage.getItem('ameen_customers') || '[]')
-        customers.push({ ...formData, id: Date.now(), joined: new Date().toLocaleDateString() })
+        customers.push({
+            ...normalizedData,
+            id: Date.now(),
+            joined: new Date().toLocaleDateString(),
+            status: 'Pending'
+        })
         localStorage.setItem('ameen_customers', JSON.stringify(customers))
         onSuccess()
     }
@@ -35,6 +46,13 @@ export default function RegisterForm({ onSuccess }) {
                     onChange={(v) => setFormData({ ...formData, email: v })}
                 />
                 <Input
+                    icon={ShieldCheck}
+                    type="password"
+                    placeholder="Create Password"
+                    value={formData.password}
+                    onChange={(v) => setFormData({ ...formData, password: v })}
+                />
+                <Input
                     icon={Phone}
                     type="tel"
                     placeholder="Phone Number"
@@ -48,7 +66,7 @@ export default function RegisterForm({ onSuccess }) {
                         type="text"
                         maxLength="11"
                         placeholder="National Identification Number (NIN)"
-                        className="w-full pl-12 pr-4 py-4 bg-navy-50 border-2 border-transparent rounded-[1.5rem] text-sm font-semibold outline-none focus:bg-white focus:border-emerald-500 transition-all placeholder:text-navy-300"
+                        className="w-full pl-12 pr-4 py-4 bg-navy-50 border-2 border-transparent rounded-[1.5rem] text-sm font-semibold outline-none focus:bg-white focus:border-emerald-500 transition-all placeholder:text-navy-300 text-navy-900"
                         value={formData.nin}
                         onChange={(e) => setFormData({ ...formData, nin: e.target.value.replace(/\D/g, '') })}
                     />
@@ -58,7 +76,7 @@ export default function RegisterForm({ onSuccess }) {
                     <textarea
                         required
                         placeholder="Home Address"
-                        className="w-full pl-12 pr-4 py-4 bg-navy-50 border-2 border-transparent rounded-[1.5rem] text-sm font-semibold outline-none focus:bg-white focus:border-emerald-500 transition-all min-h-[120px] resize-none placeholder:text-navy-300"
+                        className="w-full pl-12 pr-4 py-4 bg-navy-50 border-2 border-transparent rounded-[1.5rem] text-sm font-semibold outline-none focus:bg-white transition-all min-h-[120px] resize-none placeholder:text-navy-300 text-navy-900"
                         value={formData.address}
                         onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     />
@@ -85,7 +103,7 @@ function Input({ icon: Icon, type = "text", placeholder, value, onChange }) {
                 required
                 type={type}
                 placeholder={placeholder}
-                className="w-full pl-12 pr-4 py-4 bg-navy-50 border-2 border-transparent rounded-[1.5rem] text-sm font-semibold outline-none focus:bg-white focus:border-emerald-500 transition-all placeholder:text-navy-300"
+                className="w-full pl-12 pr-4 py-4 bg-navy-50 border-2 border-transparent rounded-[1.5rem] text-sm font-semibold outline-none focus:bg-white transition-all placeholder:text-navy-300 text-navy-900"
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
             />
