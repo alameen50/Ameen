@@ -8,6 +8,7 @@ export default function RegisterForm({ onSuccess }) {
         password: '',
         phone: '',
         nin: '',
+        bvn: '',
         address: ''
     })
 
@@ -77,6 +78,18 @@ export default function RegisterForm({ onSuccess }) {
                         className="w-full pl-12 pr-4 py-4 bg-navy-50 border-2 border-transparent rounded-[1.5rem] text-sm font-semibold outline-none focus:bg-white focus:border-emerald-500 transition-all placeholder:text-navy-300 text-navy-900"
                         value={formData.nin}
                         onChange={(e) => setFormData({ ...formData, nin: e.target.value.replace(/\D/g, '') })}
+                    />
+                </div>
+                <div className="relative group">
+                    <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-navy-300 group-focus-within:text-emerald-500 transition-colors" />
+                    <input
+                        required
+                        type="text"
+                        maxLength="11"
+                        placeholder="Bank Verification Number (BVN)"
+                        className="w-full pl-12 pr-4 py-4 bg-navy-50 border-2 border-transparent rounded-[1.5rem] text-sm font-semibold outline-none focus:bg-white focus:border-emerald-500 transition-all placeholder:text-navy-300 text-navy-900"
+                        value={formData.bvn}
+                        onChange={(e) => setFormData({ ...formData, bvn: e.target.value.replace(/\D/g, '') })}
                     />
                 </div>
                 <div className="relative group">

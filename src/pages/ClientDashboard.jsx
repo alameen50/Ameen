@@ -21,7 +21,11 @@ export default function ClientDashboard({ user, onLogout }) {
     useEffect(() => {
         const loadDashboardData = () => {
             const allLoans = JSON.parse(localStorage.getItem('ameen_loans') || '[]')
-            const myLoans = allLoans.filter(l => l.customerName === (user.fullName || user.customerName))
+            const myLoans = allLoans.filter(l => {
+                const lName = (l.customerName || 'Anonymous').trim().toLowerCase()
+                const uName = (user.fullName || user.customerName || '').trim().toLowerCase()
+                return lName === uName
+            })
 
             const active = myLoans.filter(l => l.status === 'Approved').reduce((acc, l) => acc + Number(l.amount), 0)
             const pending = myLoans.filter(l => l.status === 'Pending').reduce((acc, l) => acc + Number(l.amount), 0)
@@ -343,7 +347,7 @@ function LoansTable({ loans }) {
                                     {loan.status}
                                 </span>
                             </td>
-                            <td className="px-8 py-6 text-right font-bold text-navy-400">Mar 12, 2026</td>
+                            <td className="px-8 py-6 text-right font-bold text-navy-400">{loan.date || 'N/A'}</td>
                         </tr>
                     ))}
                 </tbody>

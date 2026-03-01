@@ -69,9 +69,10 @@ export default function AdminDashboard({ onLogout }) {
                 if (loan) {
                     const allCustomers = JSON.parse(localStorage.getItem('ameen_customers') || '[]')
                     const updatedCustomers = allCustomers.map(c => {
-                        // Match by name or NIN for safety
-                        const matchesName = (c.fullName || c.customerName) === loan.customerName
-                        const matchesNIN = c.nin && loan.nin && c.nin === loan.nin
+                        const cName = (c.fullName || c.customerName || '').trim().toLowerCase()
+                        const lName = (loan.customerName || '').trim().toLowerCase()
+                        const matchesName = cName === lName
+                        const matchesNIN = c.nin && loan.nin && String(c.nin).trim() === String(loan.nin).trim()
 
                         if ((matchesName || matchesNIN) && (c.status === 'Pending' || !c.status)) {
                             return { ...c, status: 'Approved' }
