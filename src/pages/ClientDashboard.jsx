@@ -27,8 +27,8 @@ export default function ClientDashboard({ user, onLogout }) {
                 return lName === uName
             })
 
-            const active = myLoans.filter(l => l.status === 'Approved').reduce((acc, l) => acc + Number(l.amount), 0)
-            const pending = myLoans.filter(l => l.status === 'Pending').reduce((acc, l) => acc + Number(l.amount), 0)
+            const active = myLoans.filter(l => l.status === 'Approved').reduce((acc, l) => acc + (parseFloat(String(l.amount).replace(/,/g, '')) || 0), 0)
+            const pending = myLoans.filter(l => l.status === 'Pending').reduce((acc, l) => acc + (parseFloat(String(l.amount).replace(/,/g, '')) || 0), 0)
 
             // Batch updates or wrap in microtask to avoid react-hooks/set-state-in-effect
             setLoans(myLoans)
@@ -56,7 +56,7 @@ export default function ClientDashboard({ user, onLogout }) {
         }
 
         const customers = JSON.parse(localStorage.getItem('ameen_customers') || '[]')
-        const index = customers.findIndex(c => c.email === user.email)
+        const index = customers.findIndex(c => (c.email || '').toLowerCase() === (user.email || '').toLowerCase())
 
         if (index === -1) {
             setSettingsError('User not found')
@@ -339,7 +339,7 @@ function LoansTable({ loans }) {
                     {loans.map(loan => (
                         <tr key={loan.id} className="hover:bg-navy-50/30 transition-colors">
                             <td className="px-8 py-6 font-bold text-navy-900">#{(loan.id).toString().substring(0, 8)}</td>
-                            <td className="px-8 py-6 font-black text-navy-900">₦{Number(loan.amount).toLocaleString()}</td>
+                            <td className="px-8 py-6 font-black text-navy-900">₦{(parseFloat(String(loan.amount).replace(/,/g, '')) || 0).toLocaleString()}</td>
                             <td className="px-8 py-6">
                                 <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase ${loan.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' :
                                     loan.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'
